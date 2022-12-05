@@ -2,7 +2,7 @@ from typing import Callable
 
 CrateStack = dict[int, list[str]]
 """
-Key is number of stack. 
+Key is ID of stack. 
 Value is contents of stack. 
 End of list = accessible crate at top of stack. 
 """
@@ -59,8 +59,7 @@ def move_items(
     crate_stack: CrateStack, instructions: list[str], move_func: Callable
 ) -> CrateStack:
     for line in instructions:
-        line = line.strip()
-        split = line.split(" ")
+        split = line.strip().split(" ")
         crate_stack = move_func(
             crate_stack, int(split[1]), int(split[3]), int(split[5])
         )
