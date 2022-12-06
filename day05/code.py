@@ -20,7 +20,7 @@ def get_data_at_idx(data: list[str], idx: int) -> list:
 def new_crate_stack(data: list[str]) -> CrateStack:
     """
     Input start position data from top of file.
-    Output a populated crate_stack data structure.
+    Output a populated CrateStack data structure.
     """
     crate_stack = {}
     data.reverse()
