@@ -20,11 +20,6 @@ class Directory:
         Adds directory to child_dirs if missing.
         Returns child object.
         """
-        existing_entry = next(
-            (item for item in self.child_dirs if item.name == name), None
-        )
-        if existing_entry:
-            return existing_entry
         new_child_dir = Directory(name=name, parent=self)
         self._child_dirs.append(new_child_dir)
         return new_child_dir
