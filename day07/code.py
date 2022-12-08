@@ -17,8 +17,7 @@ class Directory:
 
     def navigate_to_child(self, name: str) -> Directory:
         """
-        Adds directory to child_dirs if missing.
-        Returns child object.
+        Adds directory to child_dirs. Returns child object.
         """
         new_child_dir = Directory(name=name, parent=self)
         self._child_dirs.append(new_child_dir)
