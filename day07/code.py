@@ -1,7 +1,7 @@
 from __future__ import annotations
 
-from typing import Optional
 from dataclasses import dataclass, field
+from typing import Optional
 
 
 @dataclass
@@ -21,7 +21,7 @@ class Directory:
         Returns child object.
         """
         existing_entry = next(
-            (item for item in self._child_dirs if item.name == name), None
+            (item for item in self.child_dirs if item.name == name), None
         )
         if existing_entry:
             return existing_entry
@@ -29,28 +29,28 @@ class Directory:
         self._child_dirs.append(new_child_dir)
         return new_child_dir
 
-    @property
-    def child_file_size(self) -> int:
-        """Size of files in this directory"""
+    def get_child_file_size(self) -> int:
+        """Size of files in this directory only"""
         if not self.child_files:
             return 0
         return sum(file.size for file in self.child_files)
 
-    @property
-    def dir_size(self) -> int:
-        """Includes all child directories"""
-        total = self.child_file_size
+    def get_dir_size(self) -> int:
+        """Size of directory including all child directories"""
+        total = self.get_child_file_size()
         for child_dir in self.child_dirs:
-            total += child_dir.dir_size
+            total += child_dir.get_dir_size()
         return total
 
-    def get_all_descendent_dirs(self) -> Optional[list[Directory]]:
+    def get_descendent_dirs(self) -> Optional[list[Directory]]:
         if not self.child_dirs:
             return None
-        results = self.child_dirs
+        results = self.child_dirs.copy()
         for item in self.child_dirs:
             if item.child_dirs:
-                results.extend(item.child_dirs)
+                child_items = item.get_descendent_dirs()
+                if child_items:
+                    results.extend(child_items)
         return results
 
 
@@ -76,10 +76,22 @@ def get_ls_results(line_idx: int, data: list[str]) -> Optional[list[File]]:
 
 
 def part_one(filesystem: Directory) -> int:
-    all_dirs = filesystem.get_all_descendent_dirs()
+    all_dirs = filesystem.get_descendent_dirs()
     assert all_dirs
-    selected_dirs = [item for item in all_dirs if item.dir_size <= 100000]
-    return sum(item.dir_size for item in selected_dirs)
+    selected_dirs = [item for item in all_dirs if item.get_dir_size() <= 100000]
+    return sum(item.get_dir_size() for item in selected_dirs)
+
+
+def part_two(filesystem: Directory) -> int:
+    current_free_space = 70000000 - filesystem.get_dir_size()
+    extra_space_needed = 30000000 - current_free_space
+    all_dirs = filesystem.get_descendent_dirs()
+    assert all_dirs
+    return min(
+        item.get_dir_size()
+        for item in all_dirs
+        if item.get_dir_size() >= extra_space_needed
+    )
 
 
 def main() -> None:
@@ -104,6 +116,7 @@ def main() -> None:
                 current_dir.child_files = ls_results
 
     print(part_one(filesystem))
+    print(part_two(filesystem))
 
 
 if __name__ == "__main__":
