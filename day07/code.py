@@ -35,9 +35,8 @@ class Directory:
     def get_descendent_dirs(self) -> list[Directory]:
         results = self.child_dirs.copy()
         for item in self.child_dirs:
-            if item.child_dirs:
-                child_items = item.get_descendent_dirs()
-                results.extend(child_items)
+            child_items = item.get_descendent_dirs()
+            results.extend(child_items)
         return results
 
 
@@ -77,16 +76,13 @@ def part_two(filesystem: Directory) -> int:
 
 def main() -> None:
     with open("day07/data.txt") as file:
-        data = [line.strip() for line in file.readlines()]
+        data = [line.strip() for line in file.readlines()[1:]]
 
     filesystem = Directory(name="/")
     current_dir = filesystem
 
     for i, line in enumerate(data):
-        if line == "$ cd /":
-            # Root has already been made
-            continue
-        elif line == "$ cd ..":
+        if line == "$ cd ..":
             assert current_dir.parent, "No parent to navigate to"
             current_dir = current_dir.parent
         elif line.startswith("$ cd "):
