@@ -63,7 +63,6 @@ def get_ls_results(line_idx: int, data: list[str]) -> list[File]:
 
 def part_one(filesystem: Directory) -> int:
     all_dirs = filesystem.get_descendent_dirs()
-    assert all_dirs
     selected_dirs = [item for item in all_dirs if item.get_dir_size() <= 100000]
     return sum(item.get_dir_size() for item in selected_dirs)
 
@@ -71,7 +70,6 @@ def part_one(filesystem: Directory) -> int:
 def part_two(filesystem: Directory) -> int:
     space_needed = 30000000 - (70000000 - filesystem.get_dir_size())
     all_dirs = filesystem.get_descendent_dirs()
-    assert all_dirs
     return min(
         item.get_dir_size() for item in all_dirs if item.get_dir_size() >= space_needed
     )
