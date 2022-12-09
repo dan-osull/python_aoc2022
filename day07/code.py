@@ -16,18 +16,14 @@ class Directory:
         return self._child_dirs
 
     def navigate_to_child(self, name: str) -> Directory:
-        """
-        Adds directory to child_dirs. Returns child object.
-        """
+        """Adds directory to child_dirs. Returns child object."""
         new_child_dir = Directory(name=name, parent=self)
         self._child_dirs.append(new_child_dir)
         return new_child_dir
 
     def get_child_file_size(self) -> int:
         """Size of files in this directory only"""
-        if not self.child_files:
-            return 0
-        return sum(file.size for file in self.child_files)
+        return sum(file.size for file in self.child_files) if self.child_files else 0
 
     def get_dir_size(self) -> int:
         """Size of directory including all child directories"""
@@ -36,15 +32,12 @@ class Directory:
             total += child_dir.get_dir_size()
         return total
 
-    def get_descendent_dirs(self) -> Optional[list[Directory]]:
-        if not self.child_dirs:
-            return None
+    def get_descendent_dirs(self) -> list[Directory]:
         results = self.child_dirs.copy()
         for item in self.child_dirs:
             if item.child_dirs:
                 child_items = item.get_descendent_dirs()
-                if child_items:
-                    results.extend(child_items)
+                results.extend(child_items)
         return results
 
 
@@ -54,7 +47,7 @@ class File:
     size: int
 
 
-def get_ls_results(line_idx: int, data: list[str]) -> Optional[list[File]]:
+def get_ls_results(line_idx: int, data: list[str]) -> list[File]:
     files: list[File] = []
     for line in data[line_idx + 1 :]:
         if line[0] == "$":
@@ -65,8 +58,7 @@ def get_ls_results(line_idx: int, data: list[str]) -> Optional[list[File]]:
             # Not collecting dir info at this point
             continue
         files.append(File(split[1], int(split[0])))
-    if files:
-        return files
+    return files
 
 
 def part_one(filesystem: Directory) -> int:
@@ -77,14 +69,11 @@ def part_one(filesystem: Directory) -> int:
 
 
 def part_two(filesystem: Directory) -> int:
-    current_free_space = 70000000 - filesystem.get_dir_size()
-    extra_space_needed = 30000000 - current_free_space
+    space_needed = 30000000 - (70000000 - filesystem.get_dir_size())
     all_dirs = filesystem.get_descendent_dirs()
     assert all_dirs
     return min(
-        item.get_dir_size()
-        for item in all_dirs
-        if item.get_dir_size() >= extra_space_needed
+        item.get_dir_size() for item in all_dirs if item.get_dir_size() >= space_needed
     )
 
 
@@ -106,8 +95,7 @@ def main() -> None:
             current_dir = current_dir.navigate_to_child(line.split()[2])
         elif line == "$ ls":
             ls_results = get_ls_results(i, data)
-            if ls_results:
-                current_dir.child_files = ls_results
+            current_dir.child_files = ls_results
 
     print(part_one(filesystem))
     print(part_two(filesystem))
