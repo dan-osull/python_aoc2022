@@ -48,19 +48,15 @@ def get_tree_grid(height_grid: HeightGrid, max_idx: int) -> TreeGrid:
 
 
 def get_view_from_tree(coord: Coord, height_grid: HeightGrid, max_idx: int) -> View:
-    left_keys = [Coord(i, coord.y) for i in reversed(range(0, coord.x))]
-    left = [height_grid[key] for key in left_keys]
-
-    right_keys = [Coord(i, coord.y) for i in range(coord.x + 1, max_idx + 1)]
-    right = [height_grid[key] for key in right_keys]
-
-    above_keys = [Coord(coord.x, i) for i in reversed(range(0, coord.y))]
-    above = [height_grid[key] for key in above_keys]
-
-    below_keys = [Coord(coord.x, i) for i in range(coord.y + 1, max_idx + 1)]
-    below = [height_grid[key] for key in below_keys]
-
-    return View(left=left, right=right, above=above, below=below)
+    coords = {
+        "left": [Coord(i, coord.y) for i in reversed(range(0, coord.x))],
+        "right": [Coord(i, coord.y) for i in range(coord.x + 1, max_idx + 1)],
+        "above": [Coord(coord.x, i) for i in reversed(range(0, coord.y))],
+        "below": [Coord(coord.x, i) for i in range(coord.y + 1, max_idx + 1)],
+    }
+    return View(
+        **{key: [height_grid[key] for key in value] for key, value in coords.items()}
+    )
 
 
 def test_is_tree_visible(coord: Coord, tree: Tree, max_idx: int) -> bool:
