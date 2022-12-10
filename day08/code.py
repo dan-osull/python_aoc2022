@@ -56,7 +56,10 @@ def get_views_from_tree(coord: Coord, height_grid: HeightGrid, max_idx: int) -> 
         "below": [Coord(coord.x, i) for i in range(coord.y + 1, max_idx + 1)],
     }
     return Views(
-        **{key: [height_grid[key] for key in value] for key, value in coords.items()}
+        **{
+            key: [height_grid[coord] for coord in value]
+            for key, value in coords.items()
+        }
     )
 
 
