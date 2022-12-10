@@ -1,23 +1,16 @@
-from typing import NamedTuple
 from functools import reduce
+from time import perf_counter
+from typing import NamedTuple
 
 
-class Coord(NamedTuple):
-    x: int
-    y: int
+Coord = tuple[int, int]
+"""X and Y coordinates"""
+Views = list[list[int]]
+"""
+The views from the tree looking outwards.
 
-
-class Views(NamedTuple):
-    """
-    The view from the tree outwards in each direction.
-
-    The start of the list is closest to the tree.
-    """
-
-    left: list[int]
-    right: list[int]
-    above: list[int]
-    below: list[int]
+Each outer list is a direction. The inner list contains tree heights. The start of the list is closest to the tree.
+"""
 
 
 class Tree(NamedTuple):
@@ -33,7 +26,7 @@ def get_height_grid(data: list[str]) -> tuple[HeightGrid, int]:
     height_grid: HeightGrid = {}
     for y_axis, line in enumerate(data):
         for x_axis, char in enumerate(line):
-            height_grid[Coord(x=x_axis, y=y_axis)] = int(char)
+            height_grid[(x_axis, y_axis)] = int(char)
     # Assumes a square grid
     max_idx = len(data) - 1
     return height_grid, max_idx
@@ -49,22 +42,15 @@ def get_tree_grid(height_grid: HeightGrid, max_idx: int) -> TreeGrid:
 
 
 def get_views_from_tree(coord: Coord, height_grid: HeightGrid, max_idx: int) -> Views:
-    coords = {
-        "left": [Coord(i, coord.y) for i in reversed(range(0, coord.x))],
-        "right": [Coord(i, coord.y) for i in range(coord.x + 1, max_idx + 1)],
-        "above": [Coord(coord.x, i) for i in reversed(range(0, coord.y))],
-        "below": [Coord(coord.x, i) for i in range(coord.y + 1, max_idx + 1)],
-    }
-    return Views(
-        **{
-            key: [height_grid[coord] for coord in value]
-            for key, value in coords.items()
-        }
-    )
+    left = [height_grid[i, coord[1]] for i in reversed(range(0, coord[0]))]
+    right = [height_grid[i, coord[1]] for i in range(coord[0] + 1, max_idx + 1)]
+    above = [height_grid[coord[0], i] for i in reversed(range(0, coord[1]))]
+    below = [height_grid[coord[0], i] for i in range(coord[1] + 1, max_idx + 1)]
+    return [left, right, above, below]
 
 
 def test_is_tree_visible(coord: Coord, tree: Tree, max_idx: int) -> bool:
-    if coord.x == 0 or coord.x == max_idx or coord.y == 0 or coord.y == max_idx:
+    if coord[0] == 0 or coord[0] == max_idx or coord[1] == 0 or coord[1] == max_idx:
         # Trees on edge are always visible
         return True
     for view in tree.views:
