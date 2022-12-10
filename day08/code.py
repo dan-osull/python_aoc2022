@@ -1,5 +1,4 @@
 from typing import NamedTuple, Optional
-from time import perf_counter
 
 
 class Coord(NamedTuple):
@@ -105,10 +104,8 @@ def get_total_scenic_score(tree: Tree) -> int:
 
 
 def main() -> None:
-    start = perf_counter()
-
     with open("day08/data.txt") as file:
-        data = [line.strip() for line in file.readlines() if line.strip()]
+        data = [line.strip() for line in file.readlines()]
 
     height_grid, max_idx = get_height_grid(data)
     tree_grid = get_tree_grid(height_grid, max_idx)
@@ -127,9 +124,6 @@ def main() -> None:
         if new_score > top_score:
             top_score = new_score
     print(top_score)
-
-    end = perf_counter()
-    print(f"{end - start:0.4f} seconds")
 
 
 if __name__ == "__main__":
