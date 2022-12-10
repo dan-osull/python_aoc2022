@@ -9,17 +9,13 @@ Coord = tuple[int, int]
 
 
 def move_head(current_head_position: Coord, direction: str) -> Coord:
-    match direction:
-        case "L":
-            new_head_position = current_head_position[0] - 1, current_head_position[1]
-        case "R":
-            new_head_position = current_head_position[0] + 1, current_head_position[1]
-        case "U":
-            new_head_position = current_head_position[0], current_head_position[1] - 1
-        case "D":
-            new_head_position = current_head_position[0], current_head_position[1] + 1
-        case _:
-            raise ValueError("Invalid direction")
+    new_position_table: dict[str, Coord] = {
+        "L": (current_head_position[0] - 1, current_head_position[1]),
+        "R": (current_head_position[0] + 1, current_head_position[1]),
+        "U": (current_head_position[0], current_head_position[1] - 1),
+        "D": (current_head_position[0], current_head_position[1] + 1),
+    }
+    new_head_position = new_position_table[direction]
     logging.info(f"HEAD {direction}: {current_head_position} -> {new_head_position}")
     return new_head_position
 
@@ -61,6 +57,7 @@ def process_rope_moves(data: list[str], *, number_knots: int) -> int:
     knots: dict[int, Coord] = {i: (0, 0) for i in range(number_knots)}
     max_idx = number_knots - 1
     tail_position_history: list[Coord] = [knots[max_idx]]
+
     for line in data:
         direction, distance = line.split()
         distance = int(distance)
