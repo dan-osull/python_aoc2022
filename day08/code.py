@@ -1,7 +1,6 @@
 from functools import reduce
 from typing import NamedTuple
 
-
 Coord = tuple[int, int]
 """X and Y coordinates"""
 Views = list[list[int]]
