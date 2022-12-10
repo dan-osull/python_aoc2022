@@ -1,68 +1,89 @@
-from dataclasses import dataclass
+from typing import NamedTuple, Optional
+from time import perf_counter
 
 
-@dataclass(frozen=True)
-class Coord:
+class Coord(NamedTuple):
     x: int
     y: int
 
 
-TreeGrid = dict[Coord, int]
+class View(NamedTuple):
+    """
+    The view from the tree outwards in each direction.
+
+    The start of the list is closest to the tree.
+    """
+
+    left: Optional[list[int]]
+    right: Optional[list[int]]
+    above: Optional[list[int]]
+    below: Optional[list[int]]
 
 
-def get_source_grid(data: list[str]) -> tuple[TreeGrid, int]:
-    source: TreeGrid = {}
+class Tree(NamedTuple):
+    height: int
+    view: View
+
+
+TreeGrid = dict[Coord, Tree]
+HeightGrid = dict[Coord, int]
+
+
+def get_height_grid(data: list[str]) -> tuple[HeightGrid, int]:
+    height_grid: HeightGrid = {}
     for y_axis, line in enumerate(data):
         for x_axis, char in enumerate(line):
-            source[Coord(x_axis, y_axis)] = int(char)
+            height_grid[Coord(x=x_axis, y=y_axis)] = int(char)
     # Assumes a square grid
     max_idx = len(data) - 1
-    return source, max_idx
+    return height_grid, max_idx
 
 
-def get_lines_of_sight(
-    source: TreeGrid, tree: Coord
-) -> tuple[list[int], list[int], list[int], list[int]]:
-    left: list[int] = []
-    right: list[int] = []
-    above: list[int] = []
-    below: list[int] = []
-    for key, value in source.items():
-        if key.y == tree.y and key.x < tree.x:
-            left.append(value)
-        if key.y == tree.y and key.x > tree.x:
-            right.append(value)
-        if key.x == tree.x and key.y < tree.y:
-            above.append(value)
-        if key.x == tree.x and key.y > tree.y:
-            below.append(value)
-
-    # Start of list is closest to tree
-    left.reverse()
-    above.reverse()
-    return left, right, above, below
+def get_tree_grid(height_grid: HeightGrid, max_idx: int) -> TreeGrid:
+    tree_grid: TreeGrid = {}
+    for coord, height in height_grid.items():
+        tree_grid[coord] = Tree(
+            height=height, view=get_view_from_tree(coord, height_grid, max_idx)
+        )
+    return tree_grid
 
 
-def test_is_tree_visible(source: TreeGrid, tree: Coord, max_idx: int) -> bool:
-    if tree.x == 0 or tree.x == max_idx or tree.y == 0 or tree.y == max_idx:
+def get_view_from_tree(coord: Coord, height_grid: HeightGrid, max_idx: int) -> View:
+    left_keys = [Coord(i, coord.y) for i in reversed(range(0, coord.x))]
+    left = [height_grid[key] for key in left_keys]
+
+    right_keys = [Coord(i, coord.y) for i in range(coord.x + 1, max_idx + 1)]
+    right = [height_grid[key] for key in right_keys]
+
+    above_keys = [Coord(coord.x, i) for i in reversed(range(0, coord.y))]
+    above = [height_grid[key] for key in above_keys]
+
+    below_keys = [Coord(coord.x, i) for i in range(coord.y + 1, max_idx + 1)]
+    below = [height_grid[key] for key in below_keys]
+
+    return View(left=left, right=right, above=above, below=below)
+
+
+def test_is_tree_visible(coord: Coord, tree: Tree, max_idx: int) -> bool:
+    if coord.x == 0 or coord.x == max_idx or coord.y == 0 or coord.y == max_idx:
         # Trees on edge are always visible
         return True
-    height = source[tree]
-    left, right, above, below = get_lines_of_sight(source, tree)
     if any(
         [
-            height > max(left),
-            height > max(right),
-            height > max(above),
-            height > max(below),
+            tree.height > max(tree.view.left or [0]),
+            tree.height > max(tree.view.right or [0]),
+            tree.height > max(tree.view.above or [0]),
+            tree.height > max(tree.view.below or [0]),
         ]
     ):
         return True
     return False
 
 
-def get_score_for_line_of_sight(tree_height: int, line_of_sight: list[int]) -> int:
-    if len(line_of_sight) == 0:
+def get_score_for_line_of_sight(
+    tree_height: int, line_of_sight: Optional[list[int]]
+) -> int:
+    if not line_of_sight:
         return 0
     counter = 0
     for item in line_of_sight:
@@ -74,38 +95,41 @@ def get_score_for_line_of_sight(tree_height: int, line_of_sight: list[int]) -> i
     return counter
 
 
-def get_total_scenic_score(source: TreeGrid, tree: Coord) -> int:
-    height = source[tree]
-    left, right, above, below = get_lines_of_sight(source, tree)
+def get_total_scenic_score(tree: Tree) -> int:
     return (
-        get_score_for_line_of_sight(height, left)
-        * get_score_for_line_of_sight(height, right)
-        * get_score_for_line_of_sight(height, above)
-        * get_score_for_line_of_sight(height, below)
+        get_score_for_line_of_sight(tree.height, tree.view.left)
+        * get_score_for_line_of_sight(tree.height, tree.view.right)
+        * get_score_for_line_of_sight(tree.height, tree.view.above)
+        * get_score_for_line_of_sight(tree.height, tree.view.below)
     )
 
 
 def main() -> None:
+    start = perf_counter()
+
     with open("day08/data.txt") as file:
         data = [line.strip() for line in file.readlines() if line.strip()]
 
-    source, max_idx = get_source_grid(data)
+    height_grid, max_idx = get_height_grid(data)
+    tree_grid = get_tree_grid(height_grid, max_idx)
 
     # Part 1
-    part_one: TreeGrid = {}
-    for coord in source.keys():
-        tree_visible = test_is_tree_visible(source, coord, max_idx)
-        if tree_visible:
-            part_one[coord] = source[coord]
-    print(len(part_one))
+    trees_visible = 0
+    for coord, tree in tree_grid.items():
+        if test_is_tree_visible(coord, tree, max_idx):
+            trees_visible += 1
+    print(trees_visible)
 
     # Part 2
     top_score = 0
-    for coord in source.keys():
-        new_score = get_total_scenic_score(source, coord)
+    for coord, tree in tree_grid.items():
+        new_score = get_total_scenic_score(tree)
         if new_score > top_score:
             top_score = new_score
     print(top_score)
+
+    end = perf_counter()
+    print(f"{end - start:0.4f} seconds")
 
 
 if __name__ == "__main__":
