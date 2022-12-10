@@ -75,13 +75,11 @@ def test_is_tree_visible(coord: Coord, tree: Tree, max_idx: int) -> bool:
     return False
 
 
-def get_score_for_line_of_sight(
-    tree_height: int, line_of_sight: Optional[list[int]]
-) -> int:
-    if not line_of_sight:
+def get_score_for_view(tree_height: int, view: Optional[list[int]]) -> int:
+    if not view:
         return 0
     counter = 0
-    for item in line_of_sight:
+    for item in view:
         if item >= tree_height:
             counter += 1
             break
@@ -92,10 +90,10 @@ def get_score_for_line_of_sight(
 
 def get_total_scenic_score(tree: Tree) -> int:
     return (
-        get_score_for_line_of_sight(tree.height, tree.view.left)
-        * get_score_for_line_of_sight(tree.height, tree.view.right)
-        * get_score_for_line_of_sight(tree.height, tree.view.above)
-        * get_score_for_line_of_sight(tree.height, tree.view.below)
+        get_score_for_view(tree.height, tree.view.left)
+        * get_score_for_view(tree.height, tree.view.right)
+        * get_score_for_view(tree.height, tree.view.above)
+        * get_score_for_view(tree.height, tree.view.below)
     )
 
 
