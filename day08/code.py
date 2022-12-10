@@ -1,4 +1,5 @@
-from typing import NamedTuple, Optional
+from typing import NamedTuple
+from functools import reduce
 
 
 class Coord(NamedTuple):
@@ -6,22 +7,22 @@ class Coord(NamedTuple):
     y: int
 
 
-class View(NamedTuple):
+class Views(NamedTuple):
     """
     The view from the tree outwards in each direction.
 
     The start of the list is closest to the tree.
     """
 
-    left: Optional[list[int]]
-    right: Optional[list[int]]
-    above: Optional[list[int]]
-    below: Optional[list[int]]
+    left: list[int]
+    right: list[int]
+    above: list[int]
+    below: list[int]
 
 
 class Tree(NamedTuple):
     height: int
-    view: View
+    views: Views
 
 
 TreeGrid = dict[Coord, Tree]
@@ -42,19 +43,19 @@ def get_tree_grid(height_grid: HeightGrid, max_idx: int) -> TreeGrid:
     tree_grid: TreeGrid = {}
     for coord, height in height_grid.items():
         tree_grid[coord] = Tree(
-            height=height, view=get_view_from_tree(coord, height_grid, max_idx)
+            height=height, views=get_views_from_tree(coord, height_grid, max_idx)
         )
     return tree_grid
 
 
-def get_view_from_tree(coord: Coord, height_grid: HeightGrid, max_idx: int) -> View:
+def get_views_from_tree(coord: Coord, height_grid: HeightGrid, max_idx: int) -> Views:
     coords = {
         "left": [Coord(i, coord.y) for i in reversed(range(0, coord.x))],
         "right": [Coord(i, coord.y) for i in range(coord.x + 1, max_idx + 1)],
         "above": [Coord(coord.x, i) for i in reversed(range(0, coord.y))],
         "below": [Coord(coord.x, i) for i in range(coord.y + 1, max_idx + 1)],
     }
-    return View(
+    return Views(
         **{key: [height_grid[key] for key in value] for key, value in coords.items()}
     )
 
@@ -63,21 +64,13 @@ def test_is_tree_visible(coord: Coord, tree: Tree, max_idx: int) -> bool:
     if coord.x == 0 or coord.x == max_idx or coord.y == 0 or coord.y == max_idx:
         # Trees on edge are always visible
         return True
-    if any(
-        [
-            tree.height > max(tree.view.left or [0]),
-            tree.height > max(tree.view.right or [0]),
-            tree.height > max(tree.view.above or [0]),
-            tree.height > max(tree.view.below or [0]),
-        ]
-    ):
-        return True
+    for view in tree.views:
+        if tree.height > max(view):
+            return True
     return False
 
 
-def get_score_for_view(tree_height: int, view: Optional[list[int]]) -> int:
-    if not view:
-        return 0
+def get_score_for_view(tree_height: int, view: list[int]) -> int:
     counter = 0
     for item in view:
         if item >= tree_height:
@@ -89,12 +82,13 @@ def get_score_for_view(tree_height: int, view: Optional[list[int]]) -> int:
 
 
 def get_total_scenic_score(tree: Tree) -> int:
-    return (
-        get_score_for_view(tree.height, tree.view.left)
-        * get_score_for_view(tree.height, tree.view.right)
-        * get_score_for_view(tree.height, tree.view.above)
-        * get_score_for_view(tree.height, tree.view.below)
-    )
+    scores: list[int] = []
+    for view in tree.views:
+        score = get_score_for_view(tree.height, view)
+        if score == 0:
+            return 0
+        scores.append(score)
+    return reduce((lambda x, y: x * y), scores)
 
 
 def main() -> None:
