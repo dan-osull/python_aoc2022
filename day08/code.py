@@ -25,7 +25,6 @@ class Tree(NamedTuple):
     views: Views
 
 
-TreeGrid = dict[Coord, Tree]
 HeightGrid = dict[Coord, int]
 
 
@@ -107,7 +106,7 @@ def main() -> None:
 
     # Part 2
     top_score = 0
-    for coord, tree in tree_grid.items():
+    for tree in tree_grid.values():
         new_score = get_total_scenic_score(tree)
         if new_score > top_score:
             top_score = new_score
