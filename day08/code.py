@@ -25,6 +25,7 @@ class Tree(NamedTuple):
     views: Views
 
 
+TreeGrid = dict[Coord, Tree]
 HeightGrid = dict[Coord, int]
 
 
