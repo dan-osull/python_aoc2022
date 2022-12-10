@@ -76,7 +76,7 @@ def get_total_scenic_score(tree: Tree) -> int:
         if score == 0:
             return 0
         scores.append(score)
-    return reduce((lambda x, y: x * y), scores)
+    return reduce(lambda x, y: x * y, scores)
 
 
 def main() -> None:
