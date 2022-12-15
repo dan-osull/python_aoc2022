@@ -53,9 +53,9 @@ def test_adjacent(one: Coord, two: Coord) -> bool:
     return True
 
 
-def process_rope_moves(data: list[str], *, number_knots: int) -> int:
-    knots: dict[int, Coord] = {i: (0, 0) for i in range(number_knots)}
-    max_idx = number_knots - 1
+def process_rope_moves(data: list[str], *, number_of_knots: int = 2) -> int:
+    knots: dict[int, Coord] = {i: (0, 0) for i in range(number_of_knots)}
+    max_idx = number_of_knots - 1
     tail_position_history: list[Coord] = [knots[max_idx]]
 
     for line in data:
@@ -80,8 +80,8 @@ def main() -> None:
     with open("day09/data.txt") as file:
         data = [line.strip() for line in file.readlines()]
 
-    print(process_rope_moves(data, number_knots=2))
-    print(process_rope_moves(data, number_knots=10))
+    print(process_rope_moves(data))
+    print(process_rope_moves(data, number_of_knots=10))
 
 
 if __name__ == "__main__":
