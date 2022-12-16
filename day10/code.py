@@ -41,8 +41,8 @@ class Register:
         self._future_value = self.value + value
 
     def noop(self) -> None:
-        self._future_value = self.value
         self._unlock_at_cycle = self._current_cycle + 1
+        self._future_value = self.value
 
     def advance_cycle(self) -> None:
         self._current_cycle += 1
@@ -104,10 +104,7 @@ def part_two(
     sprite_map: SpriteMap = run_command_loop(commands, register, test_function)
     counter = 0
     for sprite in sprite_map.values():
-        if sprite:
-            results += "#"
-        else:
-            results += " "
+        results += "#" if sprite else " "
         counter += 1
         if counter == row_length:
             results += "\n"
