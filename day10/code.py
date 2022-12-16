@@ -1,4 +1,6 @@
 from dataclasses import dataclass
+from functools import partial
+from typing import Callable
 
 PART_ONE_CYCLES = [20, 60, 100, 140, 180, 220]
 PART_TWO_ROW_LENGTH = 40
@@ -7,6 +9,8 @@ RegisterHistory = dict[int, int]
 """Key = register.cycle, value = register.value"""
 SpriteMap = dict[int, bool]
 """Key = register.cycle, value = sprite True/False"""
+RegisterValueFunction = Callable[["Register"], bool | int]
+"""Function that returns a value based on the Register state"""
 
 
 @dataclass
@@ -46,32 +50,27 @@ class Register:
             self._current_value = self._future_value
 
 
-def save_register_data(
-    saved_register_data: dict,
-    register: Register,
-    cycles_of_interest: list[int],
-) -> RegisterHistory:
+def test_cycle_of_interest(register: Register, cycles_of_interest: list[int]) -> int:
     if register.cycle in cycles_of_interest:
-        saved_register_data[register.cycle] = register.value
-    return saved_register_data
+        return register.value
+    return 0
 
 
-def test_sprite_hit(register: Register) -> bool:
+def test_sprite_hit(register: Register, row_length: int) -> bool:
     sprite_position = register.cycle
-    while sprite_position > PART_TWO_ROW_LENGTH:
-        sprite_position -= PART_TWO_ROW_LENGTH
+    while sprite_position > row_length:
+        sprite_position -= row_length
     if register.value <= sprite_position <= register.value + 2:
         return True
     return False
 
 
-def part_one_loop(
-    data: list[str], register: Register, cycles_of_interest: list[int]
-) -> RegisterHistory:
-    register_history: RegisterHistory = {}
-    save_register_data(register_history, register, cycles_of_interest)
-
-    for command in data:
+def run_command_loop(
+    commands: list[str], register: Register, test_function: RegisterValueFunction
+) -> dict:
+    results = {}
+    results[register.cycle] = test_function(register)
+    for command in commands:
         split = command.split()
         if len(split) == 1:
             register.noop()
@@ -79,55 +78,50 @@ def part_one_loop(
             register.addx(int(split[1]))
         while register.locked:
             register.advance_cycle()
-            save_register_data(register_history, register, cycles_of_interest)
-
-    return register_history
-
-
-def part_two_loop(data: list[str], register: Register) -> SpriteMap:
-    sprite_map: SpriteMap = {}
-
-    sprite_map[register.cycle] = test_sprite_hit(register)
-    for command in data:
-        split = command.split()
-        if len(split) == 1:
-            register.noop()
-        else:
-            register.addx(int(split[1]))
-        while register.locked:
-            register.advance_cycle()
-            sprite_map[register.cycle] = test_sprite_hit(register)
-
-    return sprite_map
+            results[register.cycle] = test_function(register)
+    return results
 
 
-def part_one_solution(data: list[str]) -> None:
-    register = Register()
-    register_history = part_one_loop(data, register, PART_ONE_CYCLES)
-
+def part_one(
+    commands: list[str], register: Register, test_function: RegisterValueFunction
+) -> int:
+    register_history: RegisterHistory = run_command_loop(
+        commands, register, test_function
+    )
     total = 0
     for key, value in register_history.items():
         total += key * value
-    print(total)
+    return total
 
 
-def part_two_solution(data: list[str]) -> None:
-    register = Register()
-    sprite_map = part_two_loop(data, register)
+def part_two(
+    commands: list[str], register: Register, test_function: RegisterValueFunction
+) -> str:
+    results = str()
+    sprite_map: SpriteMap = run_command_loop(commands, register, test_function)
     counter = 0
     for sprite in sprite_map.values():
         if sprite:
-            print("#", end="")
+            results += "#"
         else:
-            print(".", end="")
+            results += "."
         counter += 1
         if counter == PART_TWO_ROW_LENGTH:
-            print()
+            results += "\n"
             counter = 0
+    return results
+
+
+def main() -> None:
+    with open("day10/data.txt") as file:
+        commands = [line.strip() for line in file.readlines()]
+
+    part_one_func = partial(test_cycle_of_interest, cycles_of_interest=PART_ONE_CYCLES)
+    print(part_one(commands, Register(), part_one_func))
+
+    part_two_func = partial(test_sprite_hit, row_length=PART_TWO_ROW_LENGTH)
+    print(part_two(commands, Register(), part_two_func))
 
 
 if __name__ == "__main__":
-    with open("day10/data.txt") as file:
-        data = [line.strip() for line in file.readlines()]
-    part_one_solution(data)
-    part_two_solution(data)
+    main()
