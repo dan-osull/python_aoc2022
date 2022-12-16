@@ -9,7 +9,7 @@ RegisterHistory = dict[int, int]
 """Key = register.cycle, value = register.value"""
 SpriteMap = dict[int, bool]
 """Key = register.cycle, value = sprite True/False"""
-RegisterValueFunction = Callable[["Register"], int]
+RegisterValueFunction = Callable[["Register"], bool | int]
 """Function that returns a value based on the Register state"""
 
 
@@ -56,13 +56,13 @@ def test_cycle_of_interest(register: Register, cycles_of_interest: list[int]) ->
     return 0
 
 
-def test_sprite_hit(register: Register, row_length: int) -> int:
+def test_sprite_hit(register: Register, row_length: int) -> bool:
     sprite_position = register.cycle
     while sprite_position > row_length:
         sprite_position -= row_length
     if register.value <= sprite_position <= register.value + 2:
-        return 1
-    return 0
+        return True
+    return False
 
 
 def run_command_loop(
