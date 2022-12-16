@@ -95,7 +95,10 @@ def part_one(
 
 
 def part_two(
-    commands: list[str], register: Register, test_function: RegisterValueFunction
+    commands: list[str],
+    register: Register,
+    test_function: RegisterValueFunction,
+    row_length: int,
 ) -> str:
     results = str()
     sprite_map: SpriteMap = run_command_loop(commands, register, test_function)
@@ -104,9 +107,9 @@ def part_two(
         if sprite:
             results += "#"
         else:
-            results += "."
+            results += " "
         counter += 1
-        if counter == PART_TWO_ROW_LENGTH:
+        if counter == row_length:
             results += "\n"
             counter = 0
     return results
@@ -120,7 +123,7 @@ def main() -> None:
     print(part_one(commands, Register(), part_one_func))
 
     part_two_func = partial(test_sprite_hit, row_length=PART_TWO_ROW_LENGTH)
-    print(part_two(commands, Register(), part_two_func))
+    print(part_two(commands, Register(), part_two_func, row_length=PART_TWO_ROW_LENGTH))
 
 
 if __name__ == "__main__":
