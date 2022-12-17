@@ -33,11 +33,7 @@ def move_tail(head_position: Coord, current_tail_position: Coord) -> Coord:
 
 def max_one(number: int) -> Literal[0, 1, -1]:
     """Helper function that returns 1 for any positive int, -1 for any negative"""
-    if number == 0:
-        return 0
-    if number > 0:
-        return 1
-    return -1
+    return 1 if number > 0 else -1 if number < 0 else 0
 
 
 def test_adjacent(one: Coord, two: Coord) -> bool:
