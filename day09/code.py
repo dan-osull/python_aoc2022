@@ -37,16 +37,7 @@ def max_one(number: int) -> Literal[0, 1, -1]:
 
 
 def test_adjacent(one: Coord, two: Coord) -> bool:
-    if any(
-        [
-            one[0] - two[0] > 1,
-            two[0] - one[0] > 1,
-            one[1] - two[1] > 1,
-            two[1] - one[1] > 1,
-        ]
-    ):
-        return False
-    return True
+    return not any(abs(a - b) > 1 for a, b in zip(one, two))
 
 
 def process_rope_moves(data: list[str], *, number_of_knots: int = 2) -> int:
