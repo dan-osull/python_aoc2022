@@ -37,6 +37,7 @@ def max_one(number: int) -> Literal[0, 1, -1]:
 
 
 def test_adjacent(one: Coord, two: Coord) -> bool:
+    """Helper function that returns True if two coordinates are next to each other"""
     return not any(abs(a - b) > 1 for a, b in zip(one, two))
 
 
